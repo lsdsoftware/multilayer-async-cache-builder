@@ -1,0 +1,17 @@
+{
+  "name": "s3-smart-cache",
+  "version": "1.0.0",
+  "description": "An S3 cache that won't do anything stupid",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "author": "Hai Phan <hai.phan@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^23.3.8",
+    "@types/node": "^10.12.0",
+    "aws-sdk": "^2.344.0"
+  }
+}
