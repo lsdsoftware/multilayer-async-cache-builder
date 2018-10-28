@@ -1,6 +1,8 @@
+import * as assert from "assert"
 import * as AWS from "aws-sdk"
 
-export const logger = console;
+
+export let logger = console;
 
 export interface CacheEntry {
   data: AWS.S3.Body;
@@ -14,33 +16,38 @@ export interface CacheArgs {
   memTtl: number;
 }
 
+
+
 export class Cache {
   private memCache: {[key: string]: Promise<CacheEntry>};
   private lastCleanup: number;
+
   constructor(private args: CacheArgs) {
+    assert(args && args.s3 && args.bucketName && args.materialize, "Missing args");
+    assert(args.memTtl >= 5, "Mem TTL must be at least 5");
     this.memCache = {};
-    this.lastCleanup = Date.now() + 5000;
+    this.lastCleanup = Date.now();
   }
+
   get(key: string): Promise<CacheEntry> {
     this.cleanup();
-    if (this.memCache[key]) return this.memCache[key];
-    return this.memCache[key] = this.getFromS3(key)
-      .catch(err => {
-        if (!err.message.includes("NoSuchKey")) throw err;
-        return this.args.materialize(key)
-          .then(entry => {
-            this.args.s3.putObject({Bucket: this.args.bucketName, Key: key, Body: entry.data, Metadata: entry.metadata}).promise()
-              .then(() => (<any>this.memCache[key]).expires = Date.now() + this.args.memTtl * 1000)
-              .catch(logger.error)
-            return entry;
-          })
-      })
+    if (!this.memCache[key]) {
+      this.memCache[key] = this.args.s3.getObject({Bucket: this.args.bucketName, Key: key}).promise()
+        .then(res => ({data: res.Body, metadata: res.Metadata}))
+        .catch(err => {
+          if (!err.message.includes("NoSuchKey")) throw err;
+          return this.args.materialize(key)
+            .then(entry => {
+              this.args.s3.putObject({Bucket: this.args.bucketName, Key: key, Body: entry.data, Metadata: entry.metadata}).promise().catch(logger.error);
+              return entry;
+            })
+        })
+    }
+    (<any>this.memCache[key]).expires = Date.now() + this.args.memTtl * 1000;
+    return this.memCache[key];
   }
-  getFromS3(key: string): Promise<CacheEntry> {
-    return this.args.s3.getObject({Bucket: this.args.bucketName, Key: key}).promise()
-      .then(res => ({data: res.Body, metadata: res.Metadata}))
-  }
-  cleanup() {
+
+  private cleanup() {
     const now = Date.now();
     if (now - this.lastCleanup > this.args.memTtl * 1000) {
       this.lastCleanup = now;

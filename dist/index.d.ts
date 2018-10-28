@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-export declare const logger: Console;
+export declare let logger: Console;
 export interface CacheEntry {
     data: AWS.S3.Body;
     metadata: AWS.S3.Metadata;
@@ -16,6 +16,5 @@ export declare class Cache {
     private lastCleanup;
     constructor(args: CacheArgs);
     get(key: string): Promise<CacheEntry>;
-    getFromS3(key: string): Promise<CacheEntry>;
-    cleanup(): void;
+    private cleanup;
 }

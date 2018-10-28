@@ -1,32 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const assert = require("assert");
 exports.logger = console;
 class Cache {
     constructor(args) {
         this.args = args;
+        assert(args && args.s3 && args.bucketName && args.materialize, "Missing args");
+        assert(args.memTtl >= 5, "Mem TTL must be at least 5");
         this.memCache = {};
-        this.lastCleanup = Date.now() + 5000;
+        this.lastCleanup = Date.now();
     }
     get(key) {
         this.cleanup();
-        if (this.memCache[key])
-            return this.memCache[key];
-        return this.memCache[key] = this.getFromS3(key)
-            .catch(err => {
-            if (!err.message.includes("NoSuchKey"))
-                throw err;
-            return this.args.materialize(key)
-                .then(entry => {
-                this.args.s3.putObject({ Bucket: this.args.bucketName, Key: key, Body: entry.data, Metadata: entry.metadata }).promise()
-                    .then(() => this.memCache[key].expires = Date.now() + this.args.memTtl * 1000)
-                    .catch(exports.logger.error);
-                return entry;
+        if (!this.memCache[key]) {
+            this.memCache[key] = this.args.s3.getObject({ Bucket: this.args.bucketName, Key: key }).promise()
+                .then(res => ({ data: res.Body, metadata: res.Metadata }))
+                .catch(err => {
+                if (!err.message.includes("NoSuchKey"))
+                    throw err;
+                return this.args.materialize(key)
+                    .then(entry => {
+                    this.args.s3.putObject({ Bucket: this.args.bucketName, Key: key, Body: entry.data, Metadata: entry.metadata }).promise().catch(exports.logger.error);
+                    return entry;
+                });
             });
-        });
-    }
-    getFromS3(key) {
-        return this.args.s3.getObject({ Bucket: this.args.bucketName, Key: key }).promise()
-            .then(res => ({ data: res.Body, metadata: res.Metadata }));
+        }
+        this.memCache[key].expires = Date.now() + this.args.memTtl * 1000;
+        return this.memCache[key];
     }
     cleanup() {
         const now = Date.now();
