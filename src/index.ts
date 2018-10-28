@@ -4,6 +4,10 @@ import * as AWS from "aws-sdk"
 
 export let logger = console;
 
+export interface CacheKey {
+  hashKey: string;
+}
+
 export interface CacheEntry {
   data: AWS.S3.Body;
   metadata: AWS.S3.Metadata;
@@ -29,22 +33,23 @@ export class Cache {
     this.lastCleanup = Date.now();
   }
 
-  get(key: string, ...extra: any[]): Promise<CacheEntry> {
+  get(key: string|CacheKey): Promise<CacheEntry> {
     this.cleanup();
-    if (!this.memCache[key]) {
-      this.memCache[key] = this.args.s3.getObject({Bucket: this.args.bucketName, Key: key}).promise()
+    const hashKey = typeof key == "string" ? key : key.hashKey;
+    if (!this.memCache[hashKey]) {
+      this.memCache[hashKey] = this.args.s3.getObject({Bucket: this.args.bucketName, Key: hashKey}).promise()
         .then(res => ({data: res.Body, metadata: res.Metadata}))
         .catch(err => {
           if (err.code != "NoSuchKey") throw err;
-          return this.args.materialize(key, ...extra)
+          return this.args.materialize(hashKey)
             .then(entry => {
-              this.args.s3.putObject({Bucket: this.args.bucketName, Key: key, Body: entry.data, Metadata: entry.metadata}).promise().catch(logger.error);
+              this.args.s3.putObject({Bucket: this.args.bucketName, Key: hashKey, Body: entry.data, Metadata: entry.metadata}).promise().catch(logger.error);
               return entry;
             })
         })
     }
-    (<any>this.memCache[key]).expires = Date.now() + this.args.memTtl * 1000;
-    return this.memCache[key];
+    (<any>this.memCache[hashKey]).expires = Date.now() + this.args.memTtl * 1000;
+    return this.memCache[hashKey];
   }
 
   private cleanup() {

@@ -10,23 +10,24 @@ class Cache {
         this.memCache = {};
         this.lastCleanup = Date.now();
     }
-    get(key, ...extra) {
+    get(key) {
         this.cleanup();
-        if (!this.memCache[key]) {
-            this.memCache[key] = this.args.s3.getObject({ Bucket: this.args.bucketName, Key: key }).promise()
+        const hashKey = typeof key == "string" ? key : key.hashKey;
+        if (!this.memCache[hashKey]) {
+            this.memCache[hashKey] = this.args.s3.getObject({ Bucket: this.args.bucketName, Key: hashKey }).promise()
                 .then(res => ({ data: res.Body, metadata: res.Metadata }))
                 .catch(err => {
                 if (err.code != "NoSuchKey")
                     throw err;
-                return this.args.materialize(key, ...extra)
+                return this.args.materialize(hashKey)
                     .then(entry => {
-                    this.args.s3.putObject({ Bucket: this.args.bucketName, Key: key, Body: entry.data, Metadata: entry.metadata }).promise().catch(exports.logger.error);
+                    this.args.s3.putObject({ Bucket: this.args.bucketName, Key: hashKey, Body: entry.data, Metadata: entry.metadata }).promise().catch(exports.logger.error);
                     return entry;
                 });
             });
         }
-        this.memCache[key].expires = Date.now() + this.args.memTtl * 1000;
-        return this.memCache[key];
+        this.memCache[hashKey].expires = Date.now() + this.args.memTtl * 1000;
+        return this.memCache[hashKey];
     }
     cleanup() {
         const now = Date.now();

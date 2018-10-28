@@ -5,7 +5,7 @@ test("main", async () => {
   Date.now = () => 1000;
 
   const mockGetObject = jest.fn()
-    .mockRejectedValueOnce(new Error("Error NoSuchKey "))
+    .mockRejectedValueOnce({code: "NoSuchKey", message: "Not found"})
     .mockResolvedValueOnce({Body: "two sheep", Metadata: {id: "two fish"}})
     .mockResolvedValue({Body: "last sheep", Metadata: {id: "last fish"}})
 

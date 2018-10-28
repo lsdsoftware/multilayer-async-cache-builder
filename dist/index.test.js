@@ -12,7 +12,7 @@ const index_1 = require("./index");
 test("main", () => __awaiter(this, void 0, void 0, function* () {
     Date.now = () => 1000;
     const mockGetObject = jest.fn()
-        .mockRejectedValueOnce(new Error("Error NoSuchKey "))
+        .mockRejectedValueOnce({ code: "NoSuchKey", message: "Not found" })
         .mockResolvedValueOnce({ Body: "two sheep", Metadata: { id: "two fish" } })
         .mockResolvedValue({ Body: "last sheep", Metadata: { id: "last fish" } });
     const mockPutObject = jest.fn()
