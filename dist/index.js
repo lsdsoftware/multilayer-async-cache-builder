@@ -16,7 +16,7 @@ class Cache {
             this.memCache[key] = this.args.s3.getObject({ Bucket: this.args.bucketName, Key: key }).promise()
                 .then(res => ({ data: res.Body, metadata: res.Metadata }))
                 .catch(err => {
-                if (!err.message.includes("NoSuchKey"))
+                if (err.code != "NoSuchKey")
                     throw err;
                 return this.args.materialize(key, ...extra)
                     .then(entry => {
