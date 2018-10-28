@@ -7,7 +7,7 @@ export interface CacheEntry {
 export interface CacheArgs {
     s3: AWS.S3;
     bucketName: string;
-    materialize: (key: string) => Promise<CacheEntry>;
+    materialize: (key: string, ...extra: any[]) => Promise<CacheEntry>;
     memTtl: number;
 }
 export declare class Cache {
@@ -15,6 +15,6 @@ export declare class Cache {
     private memCache;
     private lastCleanup;
     constructor(args: CacheArgs);
-    get(key: string): Promise<CacheEntry>;
+    get(key: string, ...extra: any[]): Promise<CacheEntry>;
     private cleanup;
 }

@@ -10,7 +10,7 @@ class Cache {
         this.memCache = {};
         this.lastCleanup = Date.now();
     }
-    get(key) {
+    get(key, ...extra) {
         this.cleanup();
         if (!this.memCache[key]) {
             this.memCache[key] = this.args.s3.getObject({ Bucket: this.args.bucketName, Key: key }).promise()
@@ -18,7 +18,7 @@ class Cache {
                 .catch(err => {
                 if (!err.message.includes("NoSuchKey"))
                     throw err;
-                return this.args.materialize(key)
+                return this.args.materialize(key, ...extra)
                     .then(entry => {
                     this.args.s3.putObject({ Bucket: this.args.bucketName, Key: key, Body: entry.data, Metadata: entry.metadata }).promise().catch(exports.logger.error);
                     return entry;
