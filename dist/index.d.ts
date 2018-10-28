@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 export declare let logger: Console;
 export interface CacheKey {
-    hashKey: string;
+    toString: () => string;
 }
 export interface CacheEntry {
     data: AWS.S3.Body;
@@ -10,7 +10,7 @@ export interface CacheEntry {
 export interface CacheArgs {
     s3: AWS.S3;
     bucketName: string;
-    materialize: (key: string, ...extra: any[]) => Promise<CacheEntry>;
+    materialize: (key: CacheKey) => Promise<CacheEntry>;
     memTtl: number;
 }
 export declare class Cache {
@@ -18,6 +18,6 @@ export declare class Cache {
     private memCache;
     private lastCleanup;
     constructor(args: CacheArgs);
-    get(key: string | CacheKey): Promise<CacheEntry>;
+    get(key: CacheKey): Promise<CacheEntry>;
     private cleanup;
 }

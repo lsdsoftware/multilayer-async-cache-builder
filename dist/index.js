@@ -12,14 +12,14 @@ class Cache {
     }
     get(key) {
         this.cleanup();
-        const hashKey = typeof key == "string" ? key : key.hashKey;
+        const hashKey = key.toString();
         if (!this.memCache[hashKey]) {
             this.memCache[hashKey] = this.args.s3.getObject({ Bucket: this.args.bucketName, Key: hashKey }).promise()
                 .then(res => ({ data: res.Body, metadata: res.Metadata }))
                 .catch(err => {
                 if (err.code != "NoSuchKey")
                     throw err;
-                return this.args.materialize(hashKey)
+                return this.args.materialize(key)
                     .then(entry => {
                     this.args.s3.putObject({ Bucket: this.args.bucketName, Key: hashKey, Body: entry.data, Metadata: entry.metadata }).promise().catch(exports.logger.error);
                     return entry;
