@@ -1,16 +1,8 @@
-### What
-This tool helps you construct a multilayer async cache.  Usage:
+### What Is It?
 
-```typescript
-import { cached } from "multilayer-async-cache-builder"
+A multilayer cache works as follows.  When an item is requested, first we'll go through the cache layers one by one to look for it.  If the item is found in one of the layers, we'll write it back to the preceding layers, before returning it to the caller.  If the item is not found in any of the caches, we'll call the `fetch` function to fetch the item from its origin.
 
-const getItem = cached(fetchItem, [cache1, cache2, ...]);
-
-//use it
-getItem("item-id").then(...)
-```
-
-You provide the implementation of the `fetch` function, which fetches the item from its source.  You also provide the implementation of the caches (`cache1`, `cache2`, etc.).
+This tool helps you construct a multilayer cache by implementing the above behavior.  In addition, it will dedupe promises so that simultaneous requests for the same item won't trigger redundant cache look-ups or fetches.  What you need to do is provide the implementation of the `fetch` function and the caches.
 
 ```typescript
 fetch: (key: CacheKey) => Promise<T>
@@ -25,9 +17,21 @@ interface CacheKey {
 }
 ```
 
-The multilayer cache shall work as follows.  When an item is requested, first we'll go through the caches one by one to look for it.  If the item is found in one of the caches, we'll write it back to the preceding caches, before returning it to the caller.  If the item is not found in any of the caches, we'll call the `fetch` function.
 
-We'll be sure to dedupe promises so that simultaneous requests for the same item won't trigger redundant cache look-ups or fetches.
+### Usage
+
+```typescript
+import { cached } from "multilayer-async-cache-builder"
+
+const fetchItem = /* define your fetch function */
+const cache1 = /* define your 1st cache layer */
+const cache2 = /* define your 2nd cache layer */
+
+const getItem = cached(fetchItem, [cache1, cache2]);
+
+//use it
+getItem("item-id").then(...)
+```
 
 
 ### Example
