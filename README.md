@@ -5,7 +5,7 @@ A multilayer cache works as follows.  When an item is requested, first we'll go 
 This tool helps you construct a multilayer cache by implementing the above behavior.  In addition, it will dedupe promises so that simultaneous requests for the same item won't trigger redundant cache look-ups or fetches.  What you need to do is provide the implementation of the `fetch` function and the caches.
 
 ```typescript
-fetch: (key: CacheKey) => Promise<T>
+fetch<T>: (key: CacheKey) => Promise<T>
 
 interface Cache<T> {
   get: (key: CacheKey) => Promise<T>
@@ -38,15 +38,15 @@ getItem("item-id").then(...)
 ```typescript
 const memCache = {
   cache: {},
-  get: videoId => return Promise.resolve(this.cache[videoId]),
+  get: videoId => this.cache[videoId],
   set: (videoId, data) => this.cache[videoId] = data
 }
 const diskCache = {
-  get: videoId => return promisify(fs.readFile)(`cache/${videoId}`).catch(err => undefined),
-  set: (videoId, data) => return promisify(fs.writeFile)(`cache/${videoId}`, data)
+  get: videoId => promisify(fs.readFile)(`cache/${videoId}`).catch(err => undefined),
+  set: (videoId, data) => promisify(fs.writeFile)(`cache/${videoId}`, data)
 }
 const fetchVideo = videoId => downloadFromYouTube(videoId).promise;
 
 const getVideo = cached(fetchVideo, [memCache, diskCache]);
-getVideo("27zlBpzdOZg").then(...);
+getVideo("video-id").then(...);
 ```

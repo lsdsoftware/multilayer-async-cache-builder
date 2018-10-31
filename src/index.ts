@@ -21,7 +21,7 @@ export function cached<T>(fetch: (key: CacheKey) => Promise<T>, caches: Cache<T>
       if (value !== undefined) return value;
       value = await nextFetch(key);
       transient[hashKey] = value;
-      cache.set(key, value).catch(logger.error).then(() => delete transient[hashKey]);
+      Promise.resolve().then(() => cache.set(key, value)).catch(logger.error).then(() => delete transient[hashKey]);
       return value;
     }
   }, fetch)

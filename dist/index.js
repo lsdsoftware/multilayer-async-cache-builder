@@ -22,7 +22,7 @@ function cached(fetch, caches) {
                 return value;
             value = yield nextFetch(key);
             transient[hashKey] = value;
-            cache.set(key, value).catch(exports.logger.error).then(() => delete transient[hashKey]);
+            Promise.resolve().then(() => cache.set(key, value)).catch(exports.logger.error).then(() => delete transient[hashKey]);
             return value;
         });
     }, fetch);
