@@ -9,61 +9,79 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
+class RequestQueue {
+    constructor() {
+        this.items = [];
+        this.waiters = [];
+    }
+    request(...args) {
+        return new Promise((fulfill, reject) => {
+            this.items.push({ args, fulfill, reject });
+            this.service();
+        });
+    }
+    next() {
+        return new Promise(fulfill => {
+            this.waiters.push(fulfill);
+            this.service();
+        });
+    }
+    service() {
+        while (this.items.length && this.waiters.length)
+            this.waiters.shift()(this.items.shift());
+    }
+    isClean() {
+        return this.items.length == 0 && this.waiters.length == 0;
+    }
+}
 test("main", () => __awaiter(this, void 0, void 0, function* () {
-    Date.now = () => 1000;
-    const mockGetObject = jest.fn()
-        .mockRejectedValueOnce({ code: "NoSuchKey", message: "Not found" })
-        .mockResolvedValueOnce({ Body: "two sheep", Metadata: { id: "two fish" } })
-        .mockResolvedValue({ Body: "last sheep", Metadata: { id: "last fish" } });
-    const mockPutObject = jest.fn()
-        .mockResolvedValue("OK");
-    const mockMaterialize = jest.fn()
-        .mockImplementation((key) => Promise.resolve({ data: key + " sheep", metadata: { id: key + " fish" } }));
-    const cache = new index_1.Cache({
-        s3: {
-            getObject: (opts) => ({ promise: () => mockGetObject(opts) }),
-            putObject: (opts) => ({ promise: () => mockPutObject(opts) })
-        },
-        bucketName: "test",
-        memTtl: 5,
-        materialize: mockMaterialize
-    });
-    let promise = cache.get("one");
-    expect(cache.get("one")).toBe(promise);
-    yield expect(promise).resolves.toEqual({ data: "one sheep", metadata: { id: "one fish" } });
-    expect(mockGetObject).toHaveBeenCalledTimes(1);
-    expect(mockGetObject).toHaveBeenLastCalledWith({ Bucket: "test", Key: "one" });
-    expect(mockPutObject).toHaveBeenCalledTimes(1);
-    expect(mockPutObject).toHaveBeenLastCalledWith({ Bucket: "test", Key: "one", Body: "one sheep", Metadata: { id: "one fish" } });
-    expect(mockMaterialize).toHaveBeenCalledTimes(1);
-    expect(mockMaterialize).toHaveBeenLastCalledWith("one");
-    yield expect(cache.get("one")).resolves.toEqual({ data: "one sheep", metadata: { id: "one fish" } });
-    expect(mockGetObject).toHaveBeenCalledTimes(1);
-    expect(mockPutObject).toHaveBeenCalledTimes(1);
-    expect(mockMaterialize).toHaveBeenCalledTimes(1);
-    promise = cache.get("two");
-    expect(cache.get("two")).toBe(promise);
-    yield expect(promise).resolves.toEqual({ data: "two sheep", metadata: { id: "two fish" } });
-    expect(mockGetObject).toHaveBeenCalledTimes(2);
-    expect(mockGetObject).toHaveBeenLastCalledWith({ Bucket: "test", Key: "two" });
-    expect(mockPutObject).toHaveBeenCalledTimes(1);
-    expect(mockMaterialize).toHaveBeenCalledTimes(1);
-    yield expect(cache.get("two")).resolves.toEqual({ data: "two sheep", metadata: { id: "two fish" } });
-    expect(mockGetObject).toHaveBeenCalledTimes(2);
-    expect(mockPutObject).toHaveBeenCalledTimes(1);
-    expect(mockMaterialize).toHaveBeenCalledTimes(1);
-    Date.now = () => 5500;
-    yield expect(cache.get("two")).resolves.toEqual({ data: "two sheep", metadata: { id: "two fish" } });
-    expect(mockGetObject).toHaveBeenCalledTimes(2);
-    expect(mockPutObject).toHaveBeenCalledTimes(1);
-    expect(mockMaterialize).toHaveBeenCalledTimes(1);
-    Date.now = () => 6500;
-    yield expect(cache.get("two")).resolves.toEqual({ data: "two sheep", metadata: { id: "two fish" } });
-    expect(mockGetObject).toHaveBeenCalledTimes(2);
-    expect(mockPutObject).toHaveBeenCalledTimes(1);
-    expect(mockMaterialize).toHaveBeenCalledTimes(1);
-    yield expect(cache.get("one")).resolves.toEqual({ data: "last sheep", metadata: { id: "last fish" } });
-    expect(mockGetObject).toHaveBeenCalledTimes(3);
-    expect(mockPutObject).toHaveBeenCalledTimes(1);
-    expect(mockMaterialize).toHaveBeenCalledTimes(1);
+    const q = new RequestQueue();
+    const cache = {
+        get: (key) => q.request("get", key),
+        set: (key, value) => q.request("set", key, value)
+    };
+    const fetch = (key) => q.request("fetch", key);
+    const getItem = index_1.cached(fetch, [cache]);
+    //MISS TEST
+    let promise = getItem("one");
+    //dedupe test
+    expect(getItem("one")).toBe(promise);
+    //expect cache read
+    let req = yield q.next();
+    expect(req.args).toEqual(["get", "one"]);
+    //dedupe test
+    expect(getItem("one")).toBe(promise);
+    //resolve cache read: miss
+    req.fulfill(undefined);
+    //expect fetch
+    req = yield q.next();
+    expect(req.args).toEqual(["fetch", "one"]);
+    //dedupe test
+    expect(getItem("one")).toBe(promise);
+    //resolve fetch
+    req.fulfill("one sheep");
+    //expect result
+    expect(yield promise).toBe("one sheep");
+    //expect cache write
+    req = yield q.next();
+    expect(req.args).toEqual(["set", "one", "one sheep"]);
+    //transient test
+    expect(yield getItem("one")).toBe("one sheep");
+    //resolve cache write
+    req.fulfill();
+    //check state
+    expect(q.isClean()).toBe(true);
+    //wait for transient to clear
+    yield new Promise(fulfill => setTimeout(fulfill, 0));
+    //HIT TEST
+    promise = getItem("one");
+    //expect cache read
+    req = yield q.next();
+    expect(req.args).toEqual(["get", "one"]);
+    //resolve cache read: hit
+    req.fulfill("one fish");
+    //expect result
+    expect(yield promise).toBe("one fish");
+    //check state
+    expect(q.isClean()).toBe(true);
 }));

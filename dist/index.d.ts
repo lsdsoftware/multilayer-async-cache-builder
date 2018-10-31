@@ -1,23 +1,9 @@
-import * as AWS from "aws-sdk";
 export declare let logger: Console;
 export interface CacheKey {
     toString: () => string;
 }
-export interface CacheEntry {
-    data: AWS.S3.Body;
-    metadata: AWS.S3.Metadata;
+export interface Cache<T> {
+    get: (key: CacheKey) => Promise<T>;
+    set: (key: CacheKey, value: T) => Promise<void>;
 }
-export interface CacheArgs {
-    s3: AWS.S3;
-    bucketName: string;
-    materialize: (key: CacheKey) => Promise<CacheEntry>;
-    memTtl: number;
-}
-export declare class Cache {
-    private args;
-    private memCache;
-    private lastCleanup;
-    constructor(args: CacheArgs);
-    get(key: CacheKey): Promise<CacheEntry>;
-    private cleanup;
-}
+export declare function cached<T>(fetch: (key: CacheKey) => Promise<T>, caches: Cache<T>[]): (key: CacheKey) => Promise<T>;
