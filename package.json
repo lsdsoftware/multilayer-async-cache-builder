@@ -1,8 +1,32 @@
 {
   "name": "multilayer-async-cache-builder",
-  "version": "1.0.0",
-  "description": "Tool for constructing multilayer async cache (NodeJS)",
+  "version": "1.0.1",
+  "description": "A tool for constructing multilayer cache (NodeJS)",
+  "keywords": [
+    "multilayer",
+    "multilayered",
+    "async",
+    "cache",
+    "manager",
+    "library",
+    "node",
+    "nodejs",
+    "redis",
+    "memcached"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ken107/multilayer-async-cache-builder"
+  },
+  "bugs": {
+    "url": "https://github.com/ken107/multilayer-async-cache-builder/issues"
+  },
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest"
