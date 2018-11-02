@@ -1,6 +1,8 @@
-### What Is It?
+[![Build Status](https://travis-ci.org/ken107/multilayer-async-cache-builder.svg?branch=master)](https://travis-ci.org/ken107/multilayer-async-cache-builder)
 
-A multilayer cache works as follows.  When an item is requested, first we'll go through the cache layers one by one to look for it.  If the item is found in one of the layers, we'll write it back to the preceding layers, before returning it to the caller.  If the item is not found in any of the caches, we'll call the `fetch` function to fetch the item from its origin.
+### How It Works
+
+Our multilayer cache shall work as follows.  When an item is requested, first we'll go through the cache layers one by one to look for it.  If the item is found in one of the layers, we'll write it back to the preceding layers, before returning it to the caller.  If the item is not found in any of the caches, we'll call the `fetch` function to fetch the item from its origin.
 
 This tool helps you construct a multilayer cache by implementing the above behavior.  In addition, it will dedupe promises so that simultaneous requests for the same item won't trigger redundant cache look-ups or fetches.  What you need to do is provide the implementation of the `fetch` function and the caches.
 
