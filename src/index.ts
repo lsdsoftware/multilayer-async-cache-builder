@@ -5,8 +5,8 @@ export interface CacheKey {
 }
 
 export interface Cache<T> {
-  get: (key: CacheKey) => Promise<T>;
-  set: (key: CacheKey, value: T) => Promise<void>;
+  get: (key: CacheKey) => T|Promise<T>;
+  set: (key: CacheKey, value: T) => void|Promise<void>;
 }
 
 
