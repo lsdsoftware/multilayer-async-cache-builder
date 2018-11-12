@@ -37,18 +37,5 @@ getItem("item-id").then(...)
 
 
 ### Example
-```typescript
-const memCache = {
-  cache: {},
-  get: videoId => this.cache[videoId],
-  set: (videoId, data) => this.cache[videoId] = data
-}
-const diskCache = {
-  get: videoId => promisify(fs.readFile)(`cache/${videoId}`).catch(err => undefined),
-  set: (videoId, data) => promisify(fs.writeFile)(`cache/${videoId}`, data)
-}
-const fetchVideo = videoId => downloadFromYouTube(videoId).promise;
 
-const getVideo = cached(fetchVideo, [memCache, diskCache]);
-getVideo("video-id").then(...);
-```
+For a basic example, see [simple-cache](https://github.com/ken107/simple-cache)
