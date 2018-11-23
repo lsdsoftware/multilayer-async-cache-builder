@@ -6,4 +6,14 @@ export interface Cache<T> {
     get: (key: CacheKey) => T | Promise<T>;
     set: (key: CacheKey, value: T) => void | Promise<void>;
 }
-export declare function cached<T>(fetch: (key: CacheKey) => Promise<T>, caches: Cache<T>[]): (key: CacheKey) => Promise<T>;
+export interface CacheX<In, Out> {
+    get: (key: CacheKey) => Out | Promise<Out>;
+    set: (key: CacheKey, value: In) => Out | Promise<Out>;
+}
+export declare class Fetch<T> {
+    private readonly fetch;
+    constructor(fetch: (key: CacheKey) => Promise<T>);
+    cache(cache: Cache<T>): Fetch<T>;
+    cacheX<Out>(cache: CacheX<T, Out>): Fetch<Out>;
+    dedupe(): (key: CacheKey) => Promise<T>;
+}

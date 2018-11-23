@@ -1,4 +1,4 @@
-import { cached, Cache } from "./index"
+import { Fetch, Cache, CacheX } from "./index"
 
 interface Request {
   args: any[],
@@ -37,12 +37,16 @@ class RequestQueue {
 
 test("main", async () => {
   const q = new RequestQueue();
-  const cache = {
+  const cache1: Cache<string> = {
     get: (key: string) => q.request<string>("get", key),
     set: (key: string, value: string) => q.request<void>("set", key, value)
   };
-  const fetch = (key: string) => q.request<string>("fetch", key);
-  const getItem = cached(fetch, [cache]);
+  const cache2: CacheX<number, string> = {
+    get: (key: string) => q.request<string>("get2", key),
+    set: (key: string, value: number) => q.request<string>("set2", key, value)
+  };
+  const fetch = (key: string) => q.request<number>("fetch", key);
+  const getItem = new Fetch(fetch).cacheX(cache2).cache(cache1).dedupe();
 
   //MISS TEST
   let promise = getItem("one");
@@ -50,14 +54,24 @@ test("main", async () => {
   //dedupe test
   expect(getItem("one")).toBe(promise);
 
-  //expect cache read
+  //expect cache1 read
   let req = await q.next();
   expect(req.args).toEqual(["get", "one"]);
 
   //dedupe test
   expect(getItem("one")).toBe(promise);
 
-  //resolve cache read: miss
+  //resolve cache1 read: miss
+  req.fulfill(undefined);
+
+  //expect cache2 read
+  req = await q.next();
+  expect(req.args).toEqual(["get2", "one"]);
+
+  //dedupe test
+  expect(getItem("one")).toBe(promise);
+
+  //resolve cache2 read: miss
   req.fulfill(undefined);
   
   //expect fetch
@@ -68,12 +82,22 @@ test("main", async () => {
   expect(getItem("one")).toBe(promise);
 
   //resolve fetch
+  req.fulfill(1);
+
+  //expect cache2 write
+  req = await q.next();
+  expect(req.args).toEqual(["set2", "one", 1]);
+
+  //dedupe test
+  expect(getItem("one")).toBe(promise);
+
+  //cache2 transform value
   req.fulfill("one sheep");
 
   //expect result
   expect(await promise).toBe("one sheep");
 
-  //expect cache write
+  //expect cache1 write
   req = await q.next();
   expect(req.args).toEqual(["set", "one", "one sheep"]);
   
@@ -93,11 +117,11 @@ test("main", async () => {
   //HIT TEST
   promise = getItem("one");
 
-  //expect cache read
+  //expect cache1 read
   req = await q.next();
   expect(req.args).toEqual(["get", "one"]);
 
-  //resolve cache read: hit
+  //resolve cache1 read: hit
   req.fulfill("one fish");
 
   //expect result

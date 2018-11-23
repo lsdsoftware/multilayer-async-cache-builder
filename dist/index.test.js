@@ -36,22 +36,33 @@ class RequestQueue {
 }
 test("main", () => __awaiter(this, void 0, void 0, function* () {
     const q = new RequestQueue();
-    const cache = {
+    const cache1 = {
         get: (key) => q.request("get", key),
         set: (key, value) => q.request("set", key, value)
     };
+    const cache2 = {
+        get: (key) => q.request("get2", key),
+        set: (key, value) => q.request("set2", key, value)
+    };
     const fetch = (key) => q.request("fetch", key);
-    const getItem = index_1.cached(fetch, [cache]);
+    const getItem = new index_1.Fetch(fetch).cacheX(cache2).cache(cache1).dedupe();
     //MISS TEST
     let promise = getItem("one");
     //dedupe test
     expect(getItem("one")).toBe(promise);
-    //expect cache read
+    //expect cache1 read
     let req = yield q.next();
     expect(req.args).toEqual(["get", "one"]);
     //dedupe test
     expect(getItem("one")).toBe(promise);
-    //resolve cache read: miss
+    //resolve cache1 read: miss
+    req.fulfill(undefined);
+    //expect cache2 read
+    req = yield q.next();
+    expect(req.args).toEqual(["get2", "one"]);
+    //dedupe test
+    expect(getItem("one")).toBe(promise);
+    //resolve cache2 read: miss
     req.fulfill(undefined);
     //expect fetch
     req = yield q.next();
@@ -59,10 +70,17 @@ test("main", () => __awaiter(this, void 0, void 0, function* () {
     //dedupe test
     expect(getItem("one")).toBe(promise);
     //resolve fetch
+    req.fulfill(1);
+    //expect cache2 write
+    req = yield q.next();
+    expect(req.args).toEqual(["set2", "one", 1]);
+    //dedupe test
+    expect(getItem("one")).toBe(promise);
+    //cache2 transform value
     req.fulfill("one sheep");
     //expect result
     expect(yield promise).toBe("one sheep");
-    //expect cache write
+    //expect cache1 write
     req = yield q.next();
     expect(req.args).toEqual(["set", "one", "one sheep"]);
     //transient test
@@ -75,10 +93,10 @@ test("main", () => __awaiter(this, void 0, void 0, function* () {
     yield new Promise(fulfill => setTimeout(fulfill, 0));
     //HIT TEST
     promise = getItem("one");
-    //expect cache read
+    //expect cache1 read
     req = yield q.next();
     expect(req.args).toEqual(["get", "one"]);
-    //resolve cache read: hit
+    //resolve cache1 read: hit
     req.fulfill("one fish");
     //expect result
     expect(yield promise).toBe("one fish");

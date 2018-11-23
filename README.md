@@ -23,13 +23,13 @@ interface CacheKey {
 ### Usage
 
 ```typescript
-import { cached } from "multilayer-async-cache-builder"
+import { Fetch } from "multilayer-async-cache-builder"
 
 const fetchItem = /* define your fetch function */
 const cache1 = /* define your 1st cache layer */
 const cache2 = /* define your 2nd cache layer */
 
-const getItem = cached(fetchItem, [cache1, cache2]);
+const getItem = new Fetch(fetchItem).cache(cache2).cache(cache1).dedupe();
 
 //use it
 getItem("item-id").then(...)
@@ -39,3 +39,17 @@ getItem("item-id").then(...)
 ### Example
 
 For a basic example, see [simple-cache](https://github.com/ken107/simple-cache)
+
+
+### Transformer Cache
+
+A transformer cache can return a different value to preceding layers than the one it received from subsequent layers.
+
+```typescript
+interface CacheX<T, Out> {
+  get: (key: CacheKey) => Promise<Out>
+  set: (key: CacheKey, value: T): Promise<Out>
+}
+```
+
+Note that the `set` method for a transformer cache must also return the transformed value.
