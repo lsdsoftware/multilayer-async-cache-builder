@@ -1,6 +1,6 @@
 {
   "name": "multilayer-async-cache-builder",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A tool for constructing multilayer cache (NodeJS)",
   "keywords": [
     "multilayer",

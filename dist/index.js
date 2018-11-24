@@ -24,8 +24,10 @@ class Fetch {
             if (value !== undefined)
                 return value;
             value = yield this.fetch(key);
-            transient[hashKey] = value;
-            Promise.resolve().then(() => cache.set(key, value)).catch(exports.logger.error).then(() => delete transient[hashKey]);
+            if (value !== undefined) {
+                transient[hashKey] = value;
+                Promise.resolve().then(() => cache.set(key, value)).catch(exports.logger.error).then(() => delete transient[hashKey]);
+            }
             return value;
         }));
     }
@@ -35,7 +37,9 @@ class Fetch {
             if (value !== undefined)
                 return value;
             const fetchedValue = yield this.fetch(key);
-            value = yield cache.set(key, fetchedValue);
+            if (fetchedValue !== undefined) {
+                value = yield cache.set(key, fetchedValue);
+            }
             return value;
         }));
     }
