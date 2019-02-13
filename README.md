@@ -7,15 +7,11 @@ Our multilayer cache shall work as follows.  When an item is requested, first we
 This tool helps you construct a multilayer cache by implementing the above behavior.  In addition, it will dedupe promises so that simultaneous requests for the same item won't trigger redundant cache look-ups or fetches.  What you need to do is provide the implementation of the `fetch` function and the caches.
 
 ```typescript
-fetch<T>: (key: CacheKey) => Promise<T>
+fetch<K, V>: (key: K) => Promise<V>
 
-interface Cache<T> {
-  get: (key: CacheKey) => Promise<T>
-  set: (key: CacheKey, value: T): Promise<void>
-}
-
-interface CacheKey {
-  toString: () => string
+interface Cache<K, V> {
+  get: (key: K) => Promise<V>
+  set: (key: K, value: V) => Promise<void>
 }
 ```
 
@@ -46,9 +42,9 @@ For a basic example, see [simple-cache](https://github.com/ken107/simple-cache)
 A transformer cache can return a different value to preceding layers than the one it received from subsequent layers.
 
 ```typescript
-interface CacheX<T, Out> {
-  get: (key: CacheKey) => Promise<Out>
-  set: (key: CacheKey, value: T): Promise<Out>
+interface CacheX<K, V, Out> {
+  get: (key: K) => Promise<Out>
+  set: (key: K, value: V) => Promise<Out>
 }
 ```
 

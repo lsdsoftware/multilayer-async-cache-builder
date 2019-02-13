@@ -1,19 +1,16 @@
 export declare let logger: Console;
-export interface CacheKey {
-    toString: () => string;
+export interface Cache<K, V> {
+    get: (key: K) => V | Promise<V>;
+    set: (key: K, value: V) => void | Promise<void>;
 }
-export interface Cache<T> {
-    get: (key: CacheKey) => T | Promise<T>;
-    set: (key: CacheKey, value: T) => void | Promise<void>;
+export interface CacheX<K, V, Out> {
+    get: (key: K) => Out | Promise<Out>;
+    set: (key: K, value: V) => Out | Promise<Out>;
 }
-export interface CacheX<In, Out> {
-    get: (key: CacheKey) => Out | Promise<Out>;
-    set: (key: CacheKey, value: In) => Out | Promise<Out>;
-}
-export declare class Fetch<T> {
+export declare class Fetch<K, V> {
     private readonly fetch;
-    constructor(fetch: (key: CacheKey) => Promise<T>);
-    cache(cache: Cache<T>): Fetch<T>;
-    cacheX<Out>(cache: CacheX<T, Out>): Fetch<Out>;
-    dedupe(): (key: CacheKey) => Promise<T>;
+    constructor(fetch: (key: K) => Promise<V>);
+    cache(cache: Cache<K, V>): Fetch<K, V>;
+    cacheX<Out>(cache: CacheX<K, V, Out>): Fetch<K, Out>;
+    dedupe(): (key: K) => Promise<V>;
 }

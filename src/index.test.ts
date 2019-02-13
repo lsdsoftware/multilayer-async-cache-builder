@@ -37,11 +37,11 @@ class RequestQueue {
 
 test("main", async () => {
   const q = new RequestQueue();
-  const cache1: Cache<string> = {
+  const cache1: Cache<string, string> = {
     get: (key: string) => q.request<string>("get", key),
     set: (key: string, value: string) => q.request<void>("set", key, value)
   };
-  const cache2: CacheX<number, string> = {
+  const cache2: CacheX<string, number, string> = {
     get: (key: string) => q.request<string>("get2", key),
     set: (key: string, value: number) => q.request<string>("set2", key, value)
   };

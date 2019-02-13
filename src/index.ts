@@ -1,26 +1,22 @@
 export let logger = console;
 
-export interface CacheKey {
-  toString: () => string;
+export interface Cache<K, V> {
+  get: (key: K) => V|Promise<V>;
+  set: (key: K, value: V) => void|Promise<void>;
 }
 
-export interface Cache<T> {
-  get: (key: CacheKey) => T|Promise<T>;
-  set: (key: CacheKey, value: T) => void|Promise<void>;
-}
-
-export interface CacheX<In, Out> {
-  get: (key: CacheKey) => Out|Promise<Out>;
-  set: (key: CacheKey, value: In) => Out|Promise<Out>;
+export interface CacheX<K, V, Out> {
+  get: (key: K) => Out|Promise<Out>;
+  set: (key: K, value: V) => Out|Promise<Out>;
 }
 
 
-export class Fetch<T> {
-  constructor(private readonly fetch: (key: CacheKey) => Promise<T>) {
+export class Fetch<K, V> {
+  constructor(private readonly fetch: (key: K) => Promise<V>) {
   }
-  cache(cache: Cache<T>): Fetch<T> {
-    const transient: {[key: string]: T} = {};
-    return new Fetch(async (key: CacheKey) => {
+  cache(cache: Cache<K, V>): Fetch<K, V> {
+    const transient: {[key: string]: V} = {};
+    return new Fetch(async (key: K) => {
       const hashKey = key.toString();
       let value = transient[hashKey];
       if (value !== undefined) return value;
@@ -34,8 +30,8 @@ export class Fetch<T> {
       return value;
     })
   }
-  cacheX<Out>(cache: CacheX<T, Out>): Fetch<Out> {
-    return new Fetch(async (key: CacheKey) => {
+  cacheX<Out>(cache: CacheX<K, V, Out>): Fetch<K, Out> {
+    return new Fetch(async (key: K) => {
       let value = await cache.get(key);
       if (value !== undefined) return value;
       const fetchedValue = await this.fetch(key);
@@ -45,9 +41,9 @@ export class Fetch<T> {
       return value;
     })
   }
-  dedupe(): (key: CacheKey) => Promise<T> {
-    const dedupe: {[key: string]: Promise<T>} = {};
-    return (key: CacheKey) => {
+  dedupe(): (key: K) => Promise<V> {
+    const dedupe: {[key: string]: Promise<V>} = {};
+    return (key: K) => {
       const hashKey = key.toString();
       if (dedupe[hashKey]) return dedupe[hashKey];
       dedupe[hashKey] = this.fetch(key);
