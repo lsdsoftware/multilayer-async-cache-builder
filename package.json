@@ -33,6 +33,9 @@
   },
   "author": "Hai Phan <hai.phan@gmail.com>",
   "license": "MIT",
+  "jest": {
+    "testRegex": "(\\.|/)test\\.js$"
+  },
   "devDependencies": {
     "@types/jest": "^24.0.13",
     "@types/node": "^10.12.0",
