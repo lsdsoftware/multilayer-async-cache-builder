@@ -34,9 +34,9 @@
   "author": "Hai Phan <hai.phan@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^23.3.8",
+    "@types/jest": "^24.0.13",
     "@types/node": "^10.12.0",
-    "jest": "^23.1.0",
-    "typescript": "^2.9.2"
+    "jest": "^24.8.0",
+    "typescript": "^3.5.1"
   }
 }
