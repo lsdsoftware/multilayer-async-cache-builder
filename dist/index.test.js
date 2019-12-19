@@ -104,3 +104,36 @@ test("main", () => __awaiter(void 0, void 0, void 0, function* () {
     //check state
     expect(q.isClean()).toBe(true);
 }));
+test("null-key", () => __awaiter(void 0, void 0, void 0, function* () {
+    const q = new RequestQueue();
+    const cache1 = {
+        get: (key) => q.request("get", key),
+        set: (key, value) => q.request("set", key, value)
+    };
+    const fetch = (key) => q.request("fetch", key);
+    const getItem = new index_1.Fetch(fetch).cache(cache1).dedupe();
+    const promise = getItem();
+    //dedupe test
+    expect(getItem()).toBe(promise);
+    //expect cache read
+    let req = yield q.next();
+    expect(req.args).toEqual(["get", undefined]);
+    //resolve cache read: miss
+    req.fulfill(undefined);
+    //expect fetch
+    req = yield q.next();
+    expect(req.args).toEqual(["fetch", undefined]);
+    //resolve fetch
+    req.fulfill(-100);
+    //expect result
+    expect(yield promise).toBe(-100);
+    //expect cache write
+    req = yield q.next();
+    expect(req.args).toEqual(["set", undefined, -100]);
+    //transient test
+    expect(yield getItem()).toBe(-100);
+    //resolve cache write
+    req.fulfill();
+    //check state
+    expect(q.isClean()).toBe(true);
+}));

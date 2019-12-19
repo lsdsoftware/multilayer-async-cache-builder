@@ -130,3 +130,49 @@ test("main", async () => {
   //check state
   expect(q.isClean()).toBe(true);
 })
+
+
+test("null-key", async () => {
+  const q = new RequestQueue();
+  const cache1: Cache<string, number> = {
+    get: (key: string) => q.request<number>("get", key),
+    set: (key: string, value: number) => q.request<void>("set", key, value)
+  };
+  const fetch = (key: string) => q.request<number>("fetch", key);
+  const getItem = new Fetch(fetch).cache(cache1).dedupe();
+
+  const promise = getItem();
+
+  //dedupe test
+  expect(getItem()).toBe(promise);
+
+  //expect cache read
+  let req = await q.next();
+  expect(req.args).toEqual(["get", undefined]);
+
+  //resolve cache read: miss
+  req.fulfill(undefined);
+
+  //expect fetch
+  req = await q.next();
+  expect(req.args).toEqual(["fetch", undefined]);
+
+  //resolve fetch
+  req.fulfill(-100);
+
+  //expect result
+  expect(await promise).toBe(-100);
+
+  //expect cache write
+  req = await q.next();
+  expect(req.args).toEqual(["set", undefined, -100]);
+
+  //transient test
+  expect(await getItem()).toBe(-100);
+
+  //resolve cache write
+  req.fulfill();
+
+  //check state
+  expect(q.isClean()).toBe(true);
+})

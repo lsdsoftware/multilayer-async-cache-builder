@@ -41,7 +41,7 @@ export class Fetch<K, V> {
       return value;
     })
   }
-  dedupe(): (key: K) => Promise<V> {
+  dedupe(): (key?: K) => Promise<V> {
     const dedupe: {[key: string]: Promise<V>} = {};
     return (key: K) => {
       const hashKey = String(key);
