@@ -19,7 +19,7 @@ class Fetch {
             value = await this.fetch(key);
             if (value !== undefined) {
                 transient[hashKey] = value;
-                Promise.resolve().then(() => cache.set(key, value)).catch(exports.logger.error).then(() => delete transient[hashKey]);
+                Promise.resolve(value).then(x => cache.set(key, x)).catch(exports.logger.error).then(() => delete transient[hashKey]);
             }
             return value;
         });

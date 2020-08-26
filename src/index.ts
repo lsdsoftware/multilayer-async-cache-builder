@@ -1,7 +1,7 @@
 export let logger = console;
 
 export interface Cache<K, V> {
-  get: (key: K) => V|Promise<V>;
+  get: (key: K) => V|undefined|Promise<V|undefined>;
   set: (key: K, value: V) => void|Promise<void>;
 }
 
@@ -12,10 +12,10 @@ export interface CacheX<K, V, Out> {
 
 
 export class Fetch<K, V> {
-  constructor(private readonly fetch: (key: K) => Promise<V>) {
+  constructor(private readonly fetch: (key: K) => Promise<V|undefined>) {
   }
   cache(cache: Cache<K, V>): Fetch<K, V> {
-    const transient: {[key: string]: V} = {};
+    const transient: {[key: string]: V|undefined} = {};
     return new Fetch(async (key: K) => {
       const hashKey = String(key);
       let value = transient[hashKey];
@@ -25,7 +25,7 @@ export class Fetch<K, V> {
       value = await this.fetch(key);
       if (value !== undefined) {
         transient[hashKey] = value;
-        Promise.resolve().then(() => cache.set(key, value)).catch(logger.error).then(() => delete transient[hashKey]);
+        Promise.resolve(value).then(x => cache.set(key, x)).catch(logger.error).then(() => delete transient[hashKey]);
       }
       return value;
     })
@@ -41,8 +41,8 @@ export class Fetch<K, V> {
       return value;
     })
   }
-  dedupe(): (key: K) => Promise<V> {
-    const dedupe: {[key: string]: Promise<V>} = {};
+  dedupe(): (key: K) => Promise<V|undefined> {
+    const dedupe: {[key: string]: Promise<V|undefined>} = {};
     return (key: K) => {
       const hashKey = String(key);
       if (dedupe[hashKey]) return dedupe[hashKey];
