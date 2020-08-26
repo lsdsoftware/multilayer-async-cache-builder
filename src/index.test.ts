@@ -27,7 +27,7 @@ class RequestQueue {
   }
   private service() {
     while (this.items.length && this.waiters.length)
-      this.waiters.shift()(this.items.shift());
+      this.waiters.shift()!(this.items.shift()!);
   }
   isClean() {
     return this.items.length == 0 && this.waiters.length == 0;
@@ -134,11 +134,11 @@ test("main", async () => {
 
 test("null-key", async () => {
   const q = new RequestQueue();
-  const cache1: Cache<string, number> = {
-    get: (key: string) => q.request<number>("get", key),
-    set: (key: string, value: number) => q.request<void>("set", key, value)
+  const cache1: Cache<void, number> = {
+    get: (key: void) => q.request<number>("get", key),
+    set: (key: void, value: number) => q.request<void>("set", key, value)
   };
-  const fetch = (key: string) => q.request<number>("fetch", key);
+  const fetch = (key: void) => q.request<number>("fetch", key);
   const getItem = new Fetch(fetch).cache(cache1).dedupe();
 
   const promise = getItem();

@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 class RequestQueue {
@@ -35,7 +26,7 @@ class RequestQueue {
         return this.items.length == 0 && this.waiters.length == 0;
     }
 }
-test("main", () => __awaiter(void 0, void 0, void 0, function* () {
+test("main", async () => {
     const q = new RequestQueue();
     const cache1 = {
         get: (key) => q.request("get", key),
@@ -52,59 +43,59 @@ test("main", () => __awaiter(void 0, void 0, void 0, function* () {
     //dedupe test
     expect(getItem("one")).toBe(promise);
     //expect cache1 read
-    let req = yield q.next();
+    let req = await q.next();
     expect(req.args).toEqual(["get", "one"]);
     //dedupe test
     expect(getItem("one")).toBe(promise);
     //resolve cache1 read: miss
     req.fulfill(undefined);
     //expect cache2 read
-    req = yield q.next();
+    req = await q.next();
     expect(req.args).toEqual(["get2", "one"]);
     //dedupe test
     expect(getItem("one")).toBe(promise);
     //resolve cache2 read: miss
     req.fulfill(undefined);
     //expect fetch
-    req = yield q.next();
+    req = await q.next();
     expect(req.args).toEqual(["fetch", "one"]);
     //dedupe test
     expect(getItem("one")).toBe(promise);
     //resolve fetch
     req.fulfill(1);
     //expect cache2 write
-    req = yield q.next();
+    req = await q.next();
     expect(req.args).toEqual(["set2", "one", 1]);
     //dedupe test
     expect(getItem("one")).toBe(promise);
     //cache2 transform value
     req.fulfill("one sheep");
     //expect result
-    expect(yield promise).toBe("one sheep");
+    expect(await promise).toBe("one sheep");
     //expect cache1 write
-    req = yield q.next();
+    req = await q.next();
     expect(req.args).toEqual(["set", "one", "one sheep"]);
     //transient test
-    expect(yield getItem("one")).toBe("one sheep");
+    expect(await getItem("one")).toBe("one sheep");
     //resolve cache write
     req.fulfill();
     //check state
     expect(q.isClean()).toBe(true);
     //wait for transient to clear
-    yield new Promise(fulfill => setTimeout(fulfill, 0));
+    await new Promise(fulfill => setTimeout(fulfill, 0));
     //HIT TEST
     promise = getItem("one");
     //expect cache1 read
-    req = yield q.next();
+    req = await q.next();
     expect(req.args).toEqual(["get", "one"]);
     //resolve cache1 read: hit
     req.fulfill("one fish");
     //expect result
-    expect(yield promise).toBe("one fish");
+    expect(await promise).toBe("one fish");
     //check state
     expect(q.isClean()).toBe(true);
-}));
-test("null-key", () => __awaiter(void 0, void 0, void 0, function* () {
+});
+test("null-key", async () => {
     const q = new RequestQueue();
     const cache1 = {
         get: (key) => q.request("get", key),
@@ -116,24 +107,24 @@ test("null-key", () => __awaiter(void 0, void 0, void 0, function* () {
     //dedupe test
     expect(getItem()).toBe(promise);
     //expect cache read
-    let req = yield q.next();
+    let req = await q.next();
     expect(req.args).toEqual(["get", undefined]);
     //resolve cache read: miss
     req.fulfill(undefined);
     //expect fetch
-    req = yield q.next();
+    req = await q.next();
     expect(req.args).toEqual(["fetch", undefined]);
     //resolve fetch
     req.fulfill(-100);
     //expect result
-    expect(yield promise).toBe(-100);
+    expect(await promise).toBe(-100);
     //expect cache write
-    req = yield q.next();
+    req = await q.next();
     expect(req.args).toEqual(["set", undefined, -100]);
     //transient test
-    expect(yield getItem()).toBe(-100);
+    expect(await getItem()).toBe(-100);
     //resolve cache write
     req.fulfill();
     //check state
     expect(q.isClean()).toBe(true);
-}));
+});

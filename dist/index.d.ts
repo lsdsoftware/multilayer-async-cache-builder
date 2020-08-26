@@ -12,5 +12,5 @@ export declare class Fetch<K, V> {
     constructor(fetch: (key: K) => Promise<V>);
     cache(cache: Cache<K, V>): Fetch<K, V>;
     cacheX<Out>(cache: CacheX<K, V, Out>): Fetch<K, Out>;
-    dedupe(): (key?: K) => Promise<V>;
+    dedupe(): (key: K) => Promise<V>;
 }
