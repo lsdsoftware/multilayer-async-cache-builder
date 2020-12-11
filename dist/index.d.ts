@@ -9,8 +9,8 @@ export interface CacheX<K, V, Out> {
 }
 export declare class Fetch<K, V> {
     private readonly fetch;
-    constructor(fetch: (key: K) => Promise<V | undefined>);
+    constructor(fetch: (key: K) => Promise<V>);
     cache(cache: Cache<K, V>): Fetch<K, V>;
     cacheX<Out>(cache: CacheX<K, V, Out>): Fetch<K, Out>;
-    dedupe(): (key: K) => Promise<V | undefined>;
+    dedupe(): (key: K) => Promise<V>;
 }
