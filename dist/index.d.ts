@@ -4,13 +4,13 @@ export interface Cache<K, V> {
     set: (key: K, value: V) => void | Promise<void>;
 }
 export interface CacheX<K, V, Out> {
-    get: (key: K) => Out | Promise<Out>;
+    get: (key: K) => Out | undefined | Promise<Out | undefined>;
     set: (key: K, value: V) => Out | Promise<Out>;
 }
 export declare class Fetch<K, V> {
     private readonly fetch;
-    constructor(fetch: (key: K) => Promise<V>);
+    constructor(fetch: (key: K) => Promise<V | undefined>);
     cache(cache: Cache<K, V>): Fetch<K, V>;
     cacheX<Out>(cache: CacheX<K, V, Out>): Fetch<K, Out>;
-    dedupe(): (key: K) => Promise<V>;
+    dedupe(): (key: K) => Promise<V | undefined>;
 }

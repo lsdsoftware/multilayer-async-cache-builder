@@ -6,13 +6,13 @@ export interface Cache<K, V> {
 }
 
 export interface CacheX<K, V, Out> {
-  get: (key: K) => Out|Promise<Out>;
+  get: (key: K) => Out|undefined|Promise<Out|undefined>;
   set: (key: K, value: V) => Out|Promise<Out>;
 }
 
 
 export class Fetch<K, V> {
-  constructor(private readonly fetch: (key: K) => Promise<V>) {
+  constructor(private readonly fetch: (key: K) => Promise<V|undefined>) {
   }
   cache(cache: Cache<K, V>): Fetch<K, V> {
     const transient: {[key: string]: V|undefined} = {};
@@ -41,8 +41,8 @@ export class Fetch<K, V> {
       return value;
     })
   }
-  dedupe(): (key: K) => Promise<V> {
-    const dedupe: {[key: string]: Promise<V>} = {};
+  dedupe(): (key: K) => Promise<V|undefined> {
+    const dedupe: {[key: string]: Promise<V|undefined>} = {};
     return (key: K) => {
       const hashKey = String(key);
       if (dedupe[hashKey]) return dedupe[hashKey];
