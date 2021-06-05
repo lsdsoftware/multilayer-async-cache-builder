@@ -12,7 +12,7 @@ export interface CacheX<K, V, Out> {
 
 
 export class Fetch<K, V> {
-  constructor(private readonly fetch: (key: K) => Promise<V|undefined>) {
+  constructor(private readonly fetch: (key: K) => Promise<V>) {
   }
   cache(cache: Cache<K, V>): Fetch<K, V> {
     const transient: {[key: string]: V|undefined} = {};
@@ -34,15 +34,12 @@ export class Fetch<K, V> {
     return new Fetch(async (key: K) => {
       let value = await cache.get(key);
       if (value !== undefined) return value;
-      const fetchedValue = await this.fetch(key);
-      if (fetchedValue !== undefined) {
-        value = await cache.set(key, fetchedValue);
-      }
-      return value;
+      value = await cache.set(key, await this.fetch(key))
+      return value
     })
   }
-  dedupe(): (key: K) => Promise<V|undefined> {
-    const dedupe: {[key: string]: Promise<V|undefined>} = {};
+  dedupe(): (key: K) => Promise<V> {
+    const dedupe: {[key: string]: Promise<V>} = {};
     return (key: K) => {
       const hashKey = String(key);
       if (dedupe[hashKey]) return dedupe[hashKey];

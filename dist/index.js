@@ -29,10 +29,7 @@ class Fetch {
             let value = await cache.get(key);
             if (value !== undefined)
                 return value;
-            const fetchedValue = await this.fetch(key);
-            if (fetchedValue !== undefined) {
-                value = await cache.set(key, fetchedValue);
-            }
+            value = await cache.set(key, await this.fetch(key));
             return value;
         });
     }
