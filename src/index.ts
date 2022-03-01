@@ -15,17 +15,19 @@ export class Fetch<K, V> {
   constructor(private readonly fetch: (key: K) => Promise<V>) {
   }
   cache(cache: Cache<K, V>): Fetch<K, V> {
-    const transient: {[key: string]: V|undefined} = {};
+    const transient = new Map<K, V>()
     return new Fetch(async (key: K) => {
-      const hashKey = String(key);
-      let value = transient[hashKey];
+      let value = transient.get(key)
       if (value !== undefined) return value;
       value = await cache.get(key);
       if (value !== undefined) return value;
       value = await this.fetch(key);
       if (value !== undefined) {
-        transient[hashKey] = value;
-        Promise.resolve(value).then(x => cache.set(key, x)).catch(logger.error).then(() => delete transient[hashKey]);
+        transient.set(key, value)
+        Promise.resolve(value)
+          .then(x => cache.set(key, x))
+          .catch(logger.error)
+          .then(() => transient.delete(key))
       }
       return value;
     })
@@ -39,13 +41,16 @@ export class Fetch<K, V> {
     })
   }
   dedupe(): (key: K) => Promise<V> {
-    const dedupe: {[key: string]: Promise<V>} = {};
+    const dedupe = new Map<K, Promise<V>>()
     return (key: K) => {
-      const hashKey = String(key);
-      if (dedupe[hashKey]) return dedupe[hashKey];
-      dedupe[hashKey] = this.fetch(key);
-      dedupe[hashKey].catch(err => "OK").then(() => delete dedupe[hashKey]);
-      return dedupe[hashKey];
+      let promise = dedupe.get(key)
+      if (promise) return promise
+      promise = this.fetch(key)
+      dedupe.set(key, promise)
+      promise
+        .catch(err => "OK")
+        .then(() => dedupe.delete(key))
+      return promise
     }
   }
 }
