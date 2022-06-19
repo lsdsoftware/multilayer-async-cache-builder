@@ -1,11 +1,11 @@
 export declare let logger: Console;
 export interface Cache<V> {
-    get: (hashKey: string) => V | undefined | Promise<V | undefined>;
-    set: (hashKey: string, value: V) => void | Promise<void>;
+    get: (hashKey: string) => Promise<V | undefined>;
+    set: (hashKey: string, value: V) => Promise<void>;
 }
 export interface CacheX<V, Out> {
-    get: (hashKey: string) => Out | undefined | Promise<Out | undefined>;
-    set: (hashKey: string, value: V) => Out | Promise<Out>;
+    get: (hashKey: string) => Promise<Out | undefined>;
+    set: (hashKey: string, value: V) => Promise<Out>;
 }
 export declare class Fetch<K, V> {
     private readonly fetch;
