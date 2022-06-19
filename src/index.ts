@@ -45,8 +45,8 @@ export class Fetch<K, V> {
       return value
     })
   }
-  map<Out>(mapper: (value: V) => Out): Fetch<K, Out> {
-    return new Fetch(async (key: K) => mapper(await this.fetch(key)))
+  map<Out>(mapper: (value: V, key: K) => Out): Fetch<K, Out> {
+    return new Fetch(async key => mapper(await this.fetch(key), key))
   }
   dedupe(): (key: K) => Promise<V> {
     const dedupe = new Map<string, Promise<V>>()

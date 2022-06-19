@@ -39,7 +39,7 @@ class Fetch {
         });
     }
     map(mapper) {
-        return new Fetch(async (key) => mapper(await this.fetch(key)));
+        return new Fetch(async (key) => mapper(await this.fetch(key), key));
     }
     dedupe() {
         const dedupe = new Map();
