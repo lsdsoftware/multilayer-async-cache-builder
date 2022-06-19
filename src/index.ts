@@ -1,55 +1,61 @@
 export let logger = console;
 
-export interface Cache<K, V> {
-  get: (key: K) => V|undefined|Promise<V|undefined>;
-  set: (key: K, value: V) => void|Promise<void>;
+export interface Cache<V> {
+  get: (hashKey: string) => V|undefined|Promise<V|undefined>;
+  set: (hashKey: string, value: V) => void|Promise<void>;
 }
 
-export interface CacheX<K, V, Out> {
-  get: (key: K) => Out|undefined|Promise<Out|undefined>;
-  set: (key: K, value: V) => Out|Promise<Out>;
+export interface CacheX<V, Out> {
+  get: (hashKey: string) => Out|undefined|Promise<Out|undefined>;
+  set: (hashKey: string, value: V) => Out|Promise<Out>;
 }
 
 
 export class Fetch<K, V> {
-  constructor(private readonly fetch: (key: K) => Promise<V>) {
+  constructor(
+    private readonly fetch: (key: K) => Promise<V>,
+    private readonly hashFunc: (key: K) => string = String
+  ) {
   }
-  cache(cache: Cache<K, V>): Fetch<K, V> {
-    const transient = new Map<K, V>()
+  cache(cache: Cache<V>): Fetch<K, V> {
+    const transient = new Map<string, V>()
     return new Fetch(async (key: K) => {
-      let value = transient.get(key)
+      const hashKey = this.hashFunc(key)
+      let value = transient.get(hashKey)
       if (value !== undefined) return value;
-      value = await cache.get(key);
+      value = await cache.get(hashKey)
       if (value !== undefined) return value;
       value = await this.fetch(key);
       if (value !== undefined) {
-        transient.set(key, value)
+        transient.set(hashKey, value)
         Promise.resolve(value)
-          .then(x => cache.set(key, x))
+          .then(x => cache.set(hashKey, x))
           .catch(logger.error)
-          .then(() => transient.delete(key))
+          .then(() => transient.delete(hashKey))
       }
       return value;
     })
   }
-  cacheX<Out>(cache: CacheX<K, V, Out>): Fetch<K, Out> {
+  cacheX<Out>(cache: CacheX<V, Out>): Fetch<K, Out> {
     return new Fetch(async (key: K) => {
-      let value = await cache.get(key);
+      const hashKey = this.hashFunc(key)
+      let value = await cache.get(hashKey)
       if (value !== undefined) return value;
-      value = await cache.set(key, await this.fetch(key))
+      value = await cache.set(hashKey, await this.fetch(key))
       return value
     })
   }
   dedupe(): (key: K) => Promise<V> {
-    const dedupe = new Map<K, Promise<V>>()
+    const dedupe = new Map<string, Promise<V>>()
     return (key: K) => {
-      let promise = dedupe.get(key)
+      const hashKey = this.hashFunc(key)
+      let promise = dedupe.get(hashKey)
       if (promise) return promise
       promise = this.fetch(key)
-      dedupe.set(key, promise)
+      dedupe.set(hashKey, promise)
       promise
         .catch(err => "OK")
-        .then(() => dedupe.delete(key))
+        .then(() => dedupe.delete(hashKey))
       return promise
     }
   }

@@ -37,13 +37,13 @@ class RequestQueue {
 
 test("main", async () => {
   const q = new RequestQueue();
-  const cache1: Cache<string, string> = {
-    get: (key: string) => q.request<string>("get", key),
-    set: (key: string, value: string) => q.request<void>("set", key, value)
+  const cache1: Cache<string> = {
+    get: key => q.request<string>("get", key),
+    set: (key, value) => q.request<void>("set", key, value)
   };
-  const cache2: CacheX<string, number, string> = {
-    get: (key: string) => q.request<string>("get2", key),
-    set: (key: string, value: number) => q.request<string>("set2", key, value)
+  const cache2: CacheX<number, string> = {
+    get: (key) => q.request<string>("get2", key),
+    set: (key, value) => q.request<string>("set2", key, value)
   };
   const fetch = (key: string) => q.request<number>("fetch", key);
   const getItem = new Fetch(fetch).cacheX(cache2).cache(cache1).dedupe();
@@ -134,9 +134,9 @@ test("main", async () => {
 
 test("null-key", async () => {
   const q = new RequestQueue();
-  const cache1: Cache<void, number> = {
-    get: (key: void) => q.request<number>("get", key),
-    set: (key: void, value: number) => q.request<void>("set", key, value)
+  const cache1: Cache<number> = {
+    get: (key) => q.request<number>("get", key),
+    set: (key, value) => q.request<void>("set", key, value)
   };
   const fetch = (key: void) => q.request<number>("fetch", key);
   const getItem = new Fetch(fetch).cache(cache1).dedupe();
@@ -148,7 +148,7 @@ test("null-key", async () => {
 
   //expect cache read
   let req = await q.next();
-  expect(req.args).toEqual(["get", undefined]);
+  expect(req.args).toEqual(["get", "undefined"]);
 
   //resolve cache read: miss
   req.fulfill(undefined);
@@ -165,7 +165,7 @@ test("null-key", async () => {
 
   //expect cache write
   req = await q.next();
-  expect(req.args).toEqual(["set", undefined, -100]);
+  expect(req.args).toEqual(["set", "undefined", -100]);
 
   //transient test
   expect(await getItem()).toBe(-100);

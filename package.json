@@ -1,6 +1,6 @@
 {
   "name": "multilayer-async-cache-builder",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "description": "A tool for constructing multilayer cache (NodeJS)",
   "keywords": [
     "multilayer",
@@ -34,9 +34,9 @@
   "author": "Hai Phan <hai.phan@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^27.4.1",
-    "@types/node": "^17.0.21",
-    "jest": "^27.5.1",
-    "typescript": "^4.6.2"
+    "@types/jest": "^28.1.2",
+    "@types/node": "^18.0.0",
+    "jest": "^28.1.1",
+    "typescript": "^4.7.4"
   }
 }

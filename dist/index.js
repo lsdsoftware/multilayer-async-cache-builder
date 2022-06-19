@@ -3,49 +3,53 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Fetch = exports.logger = void 0;
 exports.logger = console;
 class Fetch {
-    constructor(fetch) {
+    constructor(fetch, hashFunc = String) {
         this.fetch = fetch;
+        this.hashFunc = hashFunc;
     }
     cache(cache) {
         const transient = new Map();
         return new Fetch(async (key) => {
-            let value = transient.get(key);
+            const hashKey = this.hashFunc(key);
+            let value = transient.get(hashKey);
             if (value !== undefined)
                 return value;
-            value = await cache.get(key);
+            value = await cache.get(hashKey);
             if (value !== undefined)
                 return value;
             value = await this.fetch(key);
             if (value !== undefined) {
-                transient.set(key, value);
+                transient.set(hashKey, value);
                 Promise.resolve(value)
-                    .then(x => cache.set(key, x))
+                    .then(x => cache.set(hashKey, x))
                     .catch(exports.logger.error)
-                    .then(() => transient.delete(key));
+                    .then(() => transient.delete(hashKey));
             }
             return value;
         });
     }
     cacheX(cache) {
         return new Fetch(async (key) => {
-            let value = await cache.get(key);
+            const hashKey = this.hashFunc(key);
+            let value = await cache.get(hashKey);
             if (value !== undefined)
                 return value;
-            value = await cache.set(key, await this.fetch(key));
+            value = await cache.set(hashKey, await this.fetch(key));
             return value;
         });
     }
     dedupe() {
         const dedupe = new Map();
         return (key) => {
-            let promise = dedupe.get(key);
+            const hashKey = this.hashFunc(key);
+            let promise = dedupe.get(hashKey);
             if (promise)
                 return promise;
             promise = this.fetch(key);
-            dedupe.set(key, promise);
+            dedupe.set(hashKey, promise);
             promise
                 .catch(err => "OK")
-                .then(() => dedupe.delete(key));
+                .then(() => dedupe.delete(hashKey));
             return promise;
         };
     }
