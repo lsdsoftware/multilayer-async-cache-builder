@@ -8,10 +8,11 @@ This tool helps you construct a multilayer cache by implementing the above behav
 
 ```typescript
 fetch<K, V>: (key: K) => Promise<V>
+hashFunc: (key: K) => string
 
-interface Cache<K, V> {
-  get: (key: K) => Promise<V>
-  set: (key: K, value: V) => Promise<void>
+interface Cache<V> {
+  get: (hashKey: string) => Promise<V>
+  set: (hashKey: string, value: V) => Promise<void>
 }
 ```
 
@@ -22,10 +23,11 @@ interface Cache<K, V> {
 import { Fetch } from "multilayer-async-cache-builder"
 
 const fetchItem = /* define your fetch function */
+const hashFunc = /* optional, defaults to String(key) */
 const cache1 = /* define your 1st cache layer */
 const cache2 = /* define your 2nd cache layer */
 
-const getItem = new Fetch(fetchItem).cache(cache2).cache(cache1).dedupe();
+const getItem = new Fetch(fetchItem, hashFunc).cache(cache2).cache(cache1).dedupe();
 
 //use it
 getItem("item-id").then(...)
@@ -42,9 +44,9 @@ For a basic example, see [simple-cache](https://github.com/ken107/simple-cache)
 A transformer cache can return a different value to preceding layers than the one it received from subsequent layers.
 
 ```typescript
-interface CacheX<K, V, Out> {
-  get: (key: K) => Promise<Out>
-  set: (key: K, value: V) => Promise<Out>
+interface CacheX<V, Out> {
+  get: (hashKey: string) => Promise<Out>
+  set: (hashKey: string, value: V) => Promise<Out>
 }
 ```
 
