@@ -26,7 +26,7 @@ class Fetch {
                     .then(() => transient.delete(hashKey));
             }
             return value;
-        });
+        }, this.hashFunc);
     }
     cacheX(cache) {
         return new Fetch(async (key) => {
@@ -36,10 +36,10 @@ class Fetch {
                 return value;
             value = await cache.set(hashKey, await this.fetch(key));
             return value;
-        });
+        }, this.hashFunc);
     }
     map(mapper) {
-        return new Fetch(async (key) => mapper(await this.fetch(key), key));
+        return new Fetch(async (key) => mapper(await this.fetch(key), key), this.hashFunc);
     }
     dedupe() {
         const dedupe = new Map();

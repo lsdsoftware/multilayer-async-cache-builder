@@ -34,7 +34,7 @@ export class Fetch<K, V> {
           .then(() => transient.delete(hashKey))
       }
       return value;
-    })
+    }, this.hashFunc)
   }
   cacheX<Out>(cache: CacheX<V, Out>): Fetch<K, Out> {
     return new Fetch(async (key: K) => {
@@ -43,10 +43,10 @@ export class Fetch<K, V> {
       if (value !== undefined) return value;
       value = await cache.set(hashKey, await this.fetch(key))
       return value
-    })
+    }, this.hashFunc)
   }
   map<Out>(mapper: (value: V, key: K) => Out): Fetch<K, Out> {
-    return new Fetch(async key => mapper(await this.fetch(key), key))
+    return new Fetch(async key => mapper(await this.fetch(key), key), this.hashFunc)
   }
   dedupe(): (key: K) => Promise<V> {
     const dedupe = new Map<string, Promise<V>>()
