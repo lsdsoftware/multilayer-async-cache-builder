@@ -13,6 +13,6 @@ export declare class Fetch<K, V> {
     constructor(fetch: (key: K) => Promise<V>, hashFunc?: (key: K) => string);
     cache(cache: Cache<V>): Fetch<K, V>;
     cacheX<Out>(cache: CacheX<V, Out>): Fetch<K, Out>;
-    map<Out>(mapper: (value: V, key: K) => Out): Fetch<K, Out>;
+    map<Out>(mapper: (value: V, key: K) => Out | Promise<Out>): Fetch<K, Out>;
     dedupe(): (key: K) => Promise<V>;
 }
