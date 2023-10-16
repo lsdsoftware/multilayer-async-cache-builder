@@ -11,11 +11,13 @@ export interface CacheX<V, Out> {
 }
 
 
-export class Fetch<K, V> {
-  constructor(
-    private readonly fetch: (key: K) => Promise<V>,
-    private readonly hashFunc: (key: K) => string = String
-  ) {
+export class Fetch<K extends void|string|{hashKey: string}, V> {
+  constructor(private readonly fetch: (key: K) => Promise<V>) {
+  }
+  private hashFunc(key: K): string {
+    if (typeof key == "undefined") return "singleton"
+    if (typeof key == "string") return key
+    return key.hashKey
   }
   cache(cache: Cache<V>): Fetch<K, V> {
     const transient = new Map<string, V>()
@@ -34,7 +36,7 @@ export class Fetch<K, V> {
           .then(() => transient.delete(hashKey))
       }
       return value;
-    }, this.hashFunc)
+    })
   }
   cacheX<Out>(cache: CacheX<V, Out>): Fetch<K, Out> {
     return new Fetch(async (key: K) => {
@@ -43,10 +45,10 @@ export class Fetch<K, V> {
       if (value !== undefined) return value;
       value = await cache.set(hashKey, await this.fetch(key))
       return value
-    }, this.hashFunc)
+    })
   }
   map<Out>(mapper: (value: V, key: K) => Out|Promise<Out>): Fetch<K, Out> {
-    return new Fetch(async key => mapper(await this.fetch(key), key), this.hashFunc)
+    return new Fetch(async key => mapper(await this.fetch(key), key))
   }
   dedupe(): (key: K) => Promise<V> {
     const dedupe = new Map<string, Promise<V>>()

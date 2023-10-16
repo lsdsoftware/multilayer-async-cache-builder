@@ -8,7 +8,6 @@ This tool helps you construct a multilayer cache by implementing the above behav
 
 ```typescript
 fetch<K, V>: (key: K) => Promise<V>
-hashFunc: (key: K) => string
 
 interface Cache<V> {
   get: (hashKey: string) => Promise<V>
@@ -23,20 +22,23 @@ interface Cache<V> {
 import { Fetch } from "multilayer-async-cache-builder"
 
 const fetchItem = /* define your fetch function */
-const hashFunc = /* optional, defaults to String(key) */
 const cache1 = /* define your 1st cache layer */
 const cache2 = /* define your 2nd cache layer */
 
-const getItem = new Fetch(fetchItem, hashFunc).cache(cache2).cache(cache1).dedupe();
+const getItem = new Fetch(fetchItem)
+  .cache(cache2)
+  .cache(cache1)
+  .dedupe()
 
 //use it
-getItem("item-id").then(...)
+getItem("item-id")
+  .then(...)
 ```
 
 
 ### Example
 
-For a basic example, see [simple-cache](https://github.com/ken107/simple-cache)
+For a basic example, see [simple-cache](https://github.com/lsdsoftware/simple-cache)
 
 
 ### Transformer Cache

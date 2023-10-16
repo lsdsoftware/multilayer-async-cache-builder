@@ -108,7 +108,7 @@ test("null-key", async () => {
     expect(getItem()).toBe(promise);
     //expect cache read
     let req = await q.next();
-    expect(req.args).toEqual(["get", "undefined"]);
+    expect(req.args).toEqual(["get", "singleton"]);
     //resolve cache read: miss
     req.fulfill(undefined);
     //expect fetch
@@ -120,7 +120,7 @@ test("null-key", async () => {
     expect(await promise).toBe(-100);
     //expect cache write
     req = await q.next();
-    expect(req.args).toEqual(["set", "undefined", -100]);
+    expect(req.args).toEqual(["set", "singleton", -100]);
     //transient test
     expect(await getItem()).toBe(-100);
     //resolve cache write

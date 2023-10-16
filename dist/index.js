@@ -3,9 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Fetch = exports.logger = void 0;
 exports.logger = console;
 class Fetch {
-    constructor(fetch, hashFunc = String) {
+    constructor(fetch) {
         this.fetch = fetch;
-        this.hashFunc = hashFunc;
+    }
+    hashFunc(key) {
+        if (typeof key == "undefined")
+            return "singleton";
+        if (typeof key == "string")
+            return key;
+        return key.hashKey;
     }
     cache(cache) {
         const transient = new Map();
@@ -26,7 +32,7 @@ class Fetch {
                     .then(() => transient.delete(hashKey));
             }
             return value;
-        }, this.hashFunc);
+        });
     }
     cacheX(cache) {
         return new Fetch(async (key) => {
@@ -36,10 +42,10 @@ class Fetch {
                 return value;
             value = await cache.set(hashKey, await this.fetch(key));
             return value;
-        }, this.hashFunc);
+        });
     }
     map(mapper) {
-        return new Fetch(async (key) => mapper(await this.fetch(key), key), this.hashFunc);
+        return new Fetch(async (key) => mapper(await this.fetch(key), key));
     }
     dedupe() {
         const dedupe = new Map();
