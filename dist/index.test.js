@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
+const test_utils_1 = require("./test-utils");
 class RequestQueue {
     constructor() {
         this.items = [];
@@ -26,7 +27,7 @@ class RequestQueue {
         return this.items.length == 0 && this.waiters.length == 0;
     }
 }
-test("main", async () => {
+(0, test_utils_1.test)("main", async () => {
     const q = new RequestQueue();
     const cache1 = {
         get: key => q.request("get", key),
@@ -41,61 +42,61 @@ test("main", async () => {
     //MISS TEST
     let promise = getItem("one");
     //dedupe test
-    expect(getItem("one")).toBe(promise);
+    (0, test_utils_1.expect)(getItem("one")).toBe(promise);
     //expect cache1 read
     let req = await q.next();
-    expect(req.args).toEqual(["get", "one"]);
+    (0, test_utils_1.expect)(req.args).toEqual(["get", "one"]);
     //dedupe test
-    expect(getItem("one")).toBe(promise);
+    (0, test_utils_1.expect)(getItem("one")).toBe(promise);
     //resolve cache1 read: miss
     req.fulfill(undefined);
     //expect cache2 read
     req = await q.next();
-    expect(req.args).toEqual(["get2", "one"]);
+    (0, test_utils_1.expect)(req.args).toEqual(["get2", "one"]);
     //dedupe test
-    expect(getItem("one")).toBe(promise);
+    (0, test_utils_1.expect)(getItem("one")).toBe(promise);
     //resolve cache2 read: miss
     req.fulfill(undefined);
     //expect fetch
     req = await q.next();
-    expect(req.args).toEqual(["fetch", "one"]);
+    (0, test_utils_1.expect)(req.args).toEqual(["fetch", "one"]);
     //dedupe test
-    expect(getItem("one")).toBe(promise);
+    (0, test_utils_1.expect)(getItem("one")).toBe(promise);
     //resolve fetch
     req.fulfill(1);
     //expect cache2 write
     req = await q.next();
-    expect(req.args).toEqual(["set2", "one", 1]);
+    (0, test_utils_1.expect)(req.args).toEqual(["set2", "one", 1]);
     //dedupe test
-    expect(getItem("one")).toBe(promise);
+    (0, test_utils_1.expect)(getItem("one")).toBe(promise);
     //cache2 transform value
     req.fulfill("one sheep");
     //expect result
-    expect(await promise).toBe("one sheep");
+    (0, test_utils_1.expect)(await promise).toBe("one sheep");
     //expect cache1 write
     req = await q.next();
-    expect(req.args).toEqual(["set", "one", "one sheep"]);
+    (0, test_utils_1.expect)(req.args).toEqual(["set", "one", "one sheep"]);
     //transient test
-    expect(await getItem("one")).toBe("one sheep");
+    (0, test_utils_1.expect)(await getItem("one")).toBe("one sheep");
     //resolve cache write
     req.fulfill();
     //check state
-    expect(q.isClean()).toBe(true);
+    (0, test_utils_1.expect)(q.isClean()).toBe(true);
     //wait for transient to clear
     await new Promise(fulfill => setTimeout(fulfill, 0));
     //HIT TEST
     promise = getItem("one");
     //expect cache1 read
     req = await q.next();
-    expect(req.args).toEqual(["get", "one"]);
+    (0, test_utils_1.expect)(req.args).toEqual(["get", "one"]);
     //resolve cache1 read: hit
     req.fulfill("one fish");
     //expect result
-    expect(await promise).toBe("one fish");
+    (0, test_utils_1.expect)(await promise).toBe("one fish");
     //check state
-    expect(q.isClean()).toBe(true);
+    (0, test_utils_1.expect)(q.isClean()).toBe(true);
 });
-test("null-key", async () => {
+(0, test_utils_1.test)("null-key", async () => {
     const q = new RequestQueue();
     const cache1 = {
         get: (key) => q.request("get", key),
@@ -105,26 +106,26 @@ test("null-key", async () => {
     const getItem = new index_1.Fetch(fetch).cache(cache1).dedupe();
     const promise = getItem();
     //dedupe test
-    expect(getItem()).toBe(promise);
+    (0, test_utils_1.expect)(getItem()).toBe(promise);
     //expect cache read
     let req = await q.next();
-    expect(req.args).toEqual(["get", "singleton"]);
+    (0, test_utils_1.expect)(req.args).toEqual(["get", "singleton"]);
     //resolve cache read: miss
     req.fulfill(undefined);
     //expect fetch
     req = await q.next();
-    expect(req.args).toEqual(["fetch", undefined]);
+    (0, test_utils_1.expect)(req.args).toEqual(["fetch", undefined]);
     //resolve fetch
     req.fulfill(-100);
     //expect result
-    expect(await promise).toBe(-100);
+    (0, test_utils_1.expect)(await promise).toBe(-100);
     //expect cache write
     req = await q.next();
-    expect(req.args).toEqual(["set", "singleton", -100]);
+    (0, test_utils_1.expect)(req.args).toEqual(["set", "singleton", -100]);
     //transient test
-    expect(await getItem()).toBe(-100);
+    (0, test_utils_1.expect)(await getItem()).toBe(-100);
     //resolve cache write
     req.fulfill();
     //check state
-    expect(q.isClean()).toBe(true);
+    (0, test_utils_1.expect)(q.isClean()).toBe(true);
 });

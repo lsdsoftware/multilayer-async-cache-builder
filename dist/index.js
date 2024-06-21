@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Fetch = exports.logger = void 0;
-exports.logger = console;
+exports.Fetch = void 0;
 class Fetch {
     constructor(fetch) {
         this.fetch = fetch;
@@ -28,7 +27,7 @@ class Fetch {
                 transient.set(hashKey, value);
                 Promise.resolve(value)
                     .then(x => cache.set(hashKey, x))
-                    .catch(exports.logger.error)
+                    .catch(console.error)
                     .then(() => transient.delete(hashKey));
             }
             return value;

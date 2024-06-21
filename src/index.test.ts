@@ -1,4 +1,5 @@
 import { Fetch, Cache, CacheX } from "./index"
+import { test, expect } from "./test-utils"
 
 interface Request {
   args: any[],

@@ -1,4 +1,3 @@
-export declare let logger: Console;
 export interface Cache<V> {
     get: (hashKey: string) => Promise<V | undefined>;
     set: (hashKey: string, value: V) => Promise<void>;

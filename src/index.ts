@@ -1,4 +1,3 @@
-export let logger = console;
 
 export interface Cache<V> {
   get: (hashKey: string) => Promise<V|undefined>;
@@ -32,7 +31,7 @@ export class Fetch<K extends void|string|{hashKey: string}, V> {
         transient.set(hashKey, value)
         Promise.resolve(value)
           .then(x => cache.set(hashKey, x))
-          .catch(logger.error)
+          .catch(console.error)
           .then(() => transient.delete(hashKey))
       }
       return value;

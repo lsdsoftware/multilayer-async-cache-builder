@@ -29,13 +29,12 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "jest dist"
+    "test": "node dist/index.test"
   },
   "author": "Hai Phan <hai.phan@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^29.5.5",
-    "@types/node": "^20.8.6",
-    "typescript": "^5.2.2"
+    "@types/node": "^20.14.7",
+    "typescript": "^5.5.2"
   }
 }
